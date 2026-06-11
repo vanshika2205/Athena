@@ -1,0 +1,875 @@
+/* game.css rules imported for App.css - Premium Arcade Theme */
+:root {
+    --bg-dark: #070a13;
+    --panel-bg: rgba(10, 15, 30, 0.78);
+    --border-neon: rgba(56, 189, 248, 0.35);
+    --neon-blue: #38bdf8;
+    --neon-green: #4ade80;
+    --neon-purple: #c084fc;
+    --neon-red: #f87171;
+    --neon-gold: #fbbf24;
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --font-game: 'Outfit', sans-serif;
+    --glow-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+}
+
+/* Base resets */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: var(--font-game);
+    user-select: none;
+}
+
+body {
+    background-color: #05070c;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    color: white;
+    position: relative;
+    margin: 0;
+}
+
+.hide {
+    display: none !important;
+}
+
+/* 3D Road Perspective Wrapper */
+.game-panel {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg-dark);
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.95);
+    border-left: 4px solid rgba(56, 189, 248, 0.25);
+    border-right: 4px solid rgba(56, 189, 248, 0.25);
+    transition: background 1s ease-in-out, box-shadow 0.5s ease;
+    z-index: 10;
+    perspective: 800px;
+}
+
+/* Parallax Starry Background Layer */
+.parallax-bg {
+    position: absolute;
+    top: 0;
+    left: -40px;
+    width: calc(100% + 80px);
+    height: 45%;
+    background: 
+        radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.08) 0%, transparent 75%),
+        radial-gradient(1px 1px at 25px 40px, #eee, transparent),
+        radial-gradient(1.5px 1.5px at 120px 90px, #fff, transparent),
+        radial-gradient(1px 1px at 220px 160px, #94a3b8, transparent),
+        radial-gradient(2px 2px at 320px 60px, #38bdf8, transparent),
+        radial-gradient(1.5px 1.5px at 420px 120px, #fff, transparent);
+    background-size: 500px 500px;
+    opacity: 0.85;
+    pointer-events: none;
+    z-index: 1;
+    transition: transform 0.25s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* The actual 3D road board with scrolling neon grid gridlines */
+.road-board {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform: rotateX(25deg);
+    transform-origin: bottom center;
+    background: #0a0d16;
+    background-image: 
+        linear-gradient(rgba(56, 189, 248, 0.06) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.06) 1.5px, transparent 1.5px);
+    background-size: 40px 45px;
+    overflow: hidden;
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.9);
+    animation: gridScroll 0.9s infinite linear;
+}
+
+@keyframes gridScroll {
+    0% { background-position-y: 0; }
+    100% { background-position-y: 45px; }
+}
+
+/* Glowing side rails for realistic road boundary look */
+.road-board::before, .road-board::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--neon-blue);
+    box-shadow: 0 0 15px var(--neon-blue);
+    opacity: 0.6;
+}
+.road-board::before { left: 0; }
+.road-board::after { right: 0; }
+
+/* Accelerated red grid on Nitro active boost */
+.road-board.nitro-active-road {
+    animation-duration: 0.35s !important;
+    background-image: 
+        linear-gradient(rgba(244, 63, 94, 0.16) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(244, 63, 94, 0.16) 1.5px, transparent 1.5px) !important;
+    box-shadow: inset 0 0 60px rgba(244, 63, 94, 0.45);
+    border-color: rgba(244, 63, 94, 0.4);
+}
+.road-board.nitro-active-road::before, .road-board.nitro-active-road::after {
+    background: var(--neon-red);
+    box-shadow: 0 0 15px var(--neon-red);
+}
+
+/* Dynamic Lane Divider Lines */
+.lines {
+    width: 6px;
+    height: 120px;
+    background: linear-gradient(to bottom, transparent, var(--neon-blue), transparent);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 3px;
+    box-shadow: 0 0 10px var(--neon-blue);
+    opacity: 0.8;
+}
+
+.line-left { left: 33.33%; }
+.line-right { left: 66.66%; }
+
+/* HUD / Scoreboard (Glassmorphic pill design) */
+.score-board {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: var(--panel-bg);
+    padding: 14px 22px;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 700;
+    z-index: 100;
+    border: 1.5px solid var(--border-neon);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 15px rgba(56, 189, 248, 0.15);
+    backdrop-filter: blur(14px);
+    display: flex;
+    flex-direction: column;
+    width: 145px;
+}
+
+.score-board .level-text {
+    color: var(--neon-gold);
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-shadow: 0 0 8px rgba(252, 211, 77, 0.5);
+}
+
+/* Level Up Progress bar in HUD */
+.level-progress-container {
+    width: 100%;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    margin-top: 5px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    border: 0.5px solid rgba(255, 255, 255, 0.05);
+}
+
+.level-progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-gold), #ffd700);
+    box-shadow: 0 0 6px var(--neon-gold);
+    border-radius: 4px;
+    transition: width 0.15s ease-out;
+}
+
+.score-board .coin-text {
+    color: #ffd700;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+/* Top Right Action Bar */
+.hud-actions {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+}
+
+.hud-btn {
+    width: 44px;
+    height: 44px;
+    background: var(--panel-bg);
+    border: 1.5px solid var(--neon-blue);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    color: white;
+    cursor: pointer;
+    box-shadow: var(--glow-shadow);
+    backdrop-filter: blur(10px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hud-btn:hover {
+    transform: scale(1.1);
+    border-color: var(--neon-green);
+    box-shadow: 0 0 15px rgba(74, 222, 128, 0.6);
+}
+
+/* Volume control popover overlay */
+.volume-popover {
+    position: absolute;
+    top: 75px;
+    right: 20px;
+    background: var(--panel-bg);
+    border: 1.5px solid var(--neon-blue);
+    border-radius: 12px;
+    padding: 12px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: var(--glow-shadow);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.volume-popover.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.volume-popover label {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--text-secondary);
+}
+
+.volume-popover input[type="range"] {
+    width: 100px;
+    cursor: pointer;
+    accent-color: var(--neon-blue);
+}
+
+/* Screen Overlays (Start & Game Over Screens) */
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 13, 24, 0.88);
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    padding: 20px;
+    text-align: center;
+}
+
+.screen h1 {
+    font-size: 44px;
+    font-weight: 900;
+    color: #f8fafc;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.8);
+}
+
+.screen p {
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 25px;
+    max-width: 85%;
+    line-height: 1.5;
+}
+
+/* Buttons Styling */
+button {
+    padding: 14px 35px;
+    font-size: 18px;
+    font-weight: 800;
+    color: white;
+    background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 12px 25px rgba(14, 165, 233, 0.6);
+}
+
+/* Collectibles: Coins */
+.coin {
+    position: absolute;
+    width: 35px;
+    height: 35px;
+    background: radial-gradient(circle, #ffe066 30%, #f59e0b 80%, #d97706 100%);
+    border: 2px solid #fff;
+    border-radius: 50%;
+    z-index: 45;
+    box-shadow: 0 0 15px #f59e0b, inset 0 2px 4px rgba(255,255,255,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 900;
+    color: #78350f;
+    font-size: 12px;
+    animation: coinRotate 1.2s infinite linear;
+}
+
+@keyframes coinRotate {
+    0% { transform: rotateY(0deg) scale(1); }
+    50% { transform: rotateY(180deg) scale(1.1); }
+    100% { transform: rotateY(360deg) scale(1); }
+}
+
+/* Power-Ups Spawns */
+.powerup-item {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    z-index: 45;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    color: white;
+    border: 2px solid white;
+    box-shadow: 0 0 20px currentColor;
+    animation: bounce 0.6s infinite alternate ease-in-out;
+}
+
+.powerup-shield { background: radial-gradient(circle, #60a5fa, #2563eb); color: #93c5fd; box-shadow: 0 0 20px #2563eb; }
+.powerup-magnet { background: radial-gradient(circle, #f472b6, #db2777); color: #fbcfe8; box-shadow: 0 0 20px #db2777; }
+.powerup-nitro { background: radial-gradient(circle, #fb7185, #e11d48); color: #ffe4e6; box-shadow: 0 0 20px #e11d48; }
+.powerup-double { background: radial-gradient(circle, #fbbf24, #d97706); color: #fef3c7; box-shadow: 0 0 20px #d97706; }
+
+@keyframes bounce {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-8px); }
+}
+
+/* Screen Shaking Effect for Hit/Nitro */
+.shake {
+    animation: shakeEffect 0.3s ease-in-out;
+}
+
+@keyframes shakeEffect {
+    0%, 100% { transform: translate(0, 0); }
+    10%, 90% { transform: translate(-3px, 2px); }
+    20%, 80% { transform: translate(3px, -2px); }
+    30%, 70% { transform: translate(-5px, -1px); }
+    40%, 60% { transform: translate(5px, 2px); }
+    50% { transform: translate(-2px, -3px); }
+}
+
+/* Player Wrapper & Active Power-up Visual FX */
+.player-wrapper {
+    position: absolute;
+    bottom: 60px;
+    width: 65px;
+    height: 65px;
+    z-index: 50;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 14px; 
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    transition: left 0.18s cubic-bezier(0.19, 1, 0.22, 1), transform 0.15s ease-out;
+    background-color: rgba(255, 255, 255, 0.05); 
+}
+
+/* Power-up Shield Bubble Around Player */
+.player-shield-bubble {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    border-radius: 50%;
+    border: 3px solid #60a5fa;
+    background: rgba(96, 165, 250, 0.15);
+    box-shadow: 0 0 25px #3b82f6, inset 0 0 15px rgba(96,165,250,0.5);
+    animation: pulseBubble 1s infinite alternate ease-in-out;
+    pointer-events: none;
+    z-index: 51;
+}
+
+@keyframes pulseBubble {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    100% { transform: scale(1.05); opacity: 1; }
+}
+
+/* Nitro Trail behind player */
+.player-nitro-fire {
+    position: absolute;
+    bottom: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 50px;
+    background: linear-gradient(to bottom, #f43f5e, #f97316, transparent);
+    clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
+    animation: nitroFlame 0.15s infinite alternate steps(3);
+    pointer-events: none;
+    z-index: 49;
+}
+
+@keyframes nitroFlame {
+    0% { height: 40px; opacity: 0.9; }
+    100% { height: 55px; opacity: 1; transform: translateX(-50%) skewX(3deg); }
+}
+
+/* Magnet pull line animation */
+.magnet-ring {
+    position: absolute;
+    top: -25px;
+    left: -25px;
+    right: -25px;
+    bottom: -25px;
+    border-radius: 50%;
+    border: 2px dashed #f472b6;
+    animation: rotateMagnetRing 4s infinite linear;
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+@keyframes rotateMagnetRing {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enemies Customizations */
+.enemy {
+    position: absolute;
+    top: -150px;
+    width: 75px;
+    height: 75px;
+    border-radius: 14px;
+    z-index: 40;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: rgba(255, 255, 255, 0.15);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 0 10px rgba(0,0,0,0.9);
+    line-height: 1.1;
+    padding: 6px;
+    border: 2px solid rgba(255,255,255,0.2);
+    transition: left 0.18s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* Premium Modals (Character Selection & Leaderboard) */
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(5, 7, 12, 0.85);
+    backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 300;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 420px;
+    background: rgba(10, 14, 28, 0.95);
+    border: 2px solid var(--neon-blue);
+    border-radius: 24px;
+    padding: 25px;
+    box-shadow: 0 0 35px rgba(56, 189, 248, 0.4);
+    text-align: center;
+    position: relative;
+    transform: translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-overlay.show .modal-content {
+    transform: translateY(0);
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 30px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+    background: var(--neon-red);
+    box-shadow: 0 0 10px var(--neon-red);
+}
+
+.modal-title {
+    font-size: 24px;
+    font-weight: 900;
+    color: var(--neon-blue);
+    text-transform: uppercase;
+    margin-bottom: 15px;
+    letter-spacing: 1px;
+    text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+/* Character Selection Carousel Grid */
+.shop-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin: 15px 0;
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.shop-card {
+    background: rgba(30, 41, 59, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.shop-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(56, 189, 248, 0.5);
+}
+
+.shop-card.selected {
+    border-color: var(--neon-green);
+    background: rgba(74, 222, 128, 0.08);
+    box-shadow: 0 0 15px rgba(74, 222, 128, 0.3);
+}
+
+.shop-card-img {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.shop-card-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+}
+
+.shop-card-desc {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.2;
+    height: 24px;
+}
+
+.shop-card-price {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--neon-gold);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 4px;
+}
+
+.shop-card.owned .shop-card-price {
+    color: var(--neon-green);
+}
+
+/* Leaderboard Board layout */
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.leaderboard-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: rgba(30, 41, 59, 0.5);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.leaderboard-row.gold { border-color: var(--neon-gold); background: rgba(252, 211, 77, 0.08); }
+.leaderboard-row.silver { border-color: #cbd5e1; background: rgba(203, 213, 225, 0.08); }
+.leaderboard-row.bronze { border-color: #b45309; background: rgba(180, 83, 9, 0.08); }
+
+.leaderboard-rank {
+    font-weight: 900;
+    font-size: 16px;
+    width: 24px;
+}
+.leaderboard-row.gold .leaderboard-rank { color: var(--neon-gold); }
+.leaderboard-row.silver .leaderboard-rank { color: #cbd5e1; }
+.leaderboard-row.bronze .leaderboard-rank { color: #d97706; }
+
+.leaderboard-name {
+    flex-grow: 1;
+    text-align: left;
+    margin-left: 10px;
+    font-weight: 600;
+}
+
+.leaderboard-score-details {
+    text-align: right;
+}
+
+.leaderboard-score {
+    font-weight: 700;
+    color: var(--neon-blue);
+}
+
+.leaderboard-level {
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+
+/* Active Power-up overlay indicators on bottom-left */
+.active-powerups-hud {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.powerup-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1.5px solid var(--neon-blue);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    transform: translateX(-100px);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.powerup-indicator.show {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.powerup-indicator-progress {
+    width: 60px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.powerup-indicator-bar {
+    height: 100%;
+    width: 100%;
+    background: var(--neon-blue);
+    transform-origin: left center;
+    transition: transform 0.1s linear;
+}
+
+.powerup-indicator.shield-active { border-color: #3b82f6; }
+.powerup-indicator.shield-active .powerup-indicator-bar { background: #3b82f6; }
+.powerup-indicator.magnet-active { border-color: #db2777; }
+.powerup-indicator.magnet-active .powerup-indicator-bar { background: #db2777; }
+.powerup-indicator.nitro-active { border-color: #e11d48; }
+.powerup-indicator.nitro-active .powerup-indicator-bar { background: #e11d48; }
+.powerup-indicator.double-active { border-color: #fbbf24; }
+.powerup-indicator.double-active .powerup-indicator-bar { background: #fbbf24; }
+
+/* Custom Scrollbar for Shop */
+.shop-grid::-webkit-scrollbar {
+    width: 6px;
+}
+.shop-grid::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px;
+}
+.shop-grid::-webkit-scrollbar-thumb {
+    background: var(--neon-blue);
+    border-radius: 3px;
+}
+
+/* Level Up Message Animation styling */
+#levelUpMsg {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 52px;
+    font-weight: 900;
+    color: #fcd34d;
+    text-shadow: 0 0 40px #f59e0b, 0 0 10px #ffffff, 2px 2px 5px black;
+    z-index: 300;
+    pointer-events: none;
+    opacity: 0;
+    text-align: center;
+    width: 100%;
+}
+
+.level-animate {
+    animation: levelBloom 2.5s forwards ease-out;
+}
+
+@keyframes levelBloom {
+    0% { transform: translate(-50%, -50%) scale(0.2) rotate(-10deg); opacity: 0; }
+    15% { transform: translate(-50%, -50%) scale(1.2) rotate(5deg); opacity: 1; }
+    25% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; text-shadow: 0 0 60px #f59e0b, 0 0 20px white; }
+    80% { transform: translate(-50%, -50%) translateY(-20px) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) translateY(-50px) scale(1.5); opacity: 0; }
+}
+
+/* YouTube Troll Video Popup */
+#memeVideoPopup {
+    position: absolute;
+    right: -450px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 315px;
+    height: 560px;
+    border-radius: 20px;
+    border: 4px solid #ef4444;
+    box-shadow: 0 0 50px rgba(239, 68, 68, 0.6);
+    overflow: hidden;
+    transition: right 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 1000;
+    background: black;
+}
+
+#memeVideoPopup.show {
+    right: 50px;
+}
+
+@media (max-width: 1000px) {
+    #memeVideoPopup {
+        right: auto;
+        left: 50%;
+        top: auto;
+        bottom: -650px;
+        transform: translateX(-50%) translateY(0);
+        transition: bottom 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        zoom: 0.9;
+    }
+    #memeVideoPopup.show {
+        bottom: 20px;
+    }
+}
+
+/* Touch controls buttons for mobile view */
+.controls {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 40px;
+    z-index: 100;
+}
+
+@media (min-width: 768px) {
+    .controls {
+        display: none;
+    }
+}
+
+.ctrl-btn {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    color: white;
+    font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(10px);
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
+}
+
+.ctrl-btn:active {
+    background: rgba(255, 255, 255, 0.5);
+}
