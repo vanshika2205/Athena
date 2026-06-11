@@ -1,16 +1,110 @@
-# React + Vite
+# 🎮 Athena
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Athena is a browser-based adventure game built with React and Vite, designed to deliver an immersive gaming experience through interactive gameplay, engaging visuals, and modern web technologies.
 
-Currently, two official plugins are available:
+## 🚀 Live Demo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+https://athena-rho-three.vercel.app/
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ✨ Features
 
-## Expanding the ESLint configuration
+* Interactive Gameplay
+* Responsive User Interface
+* Dynamic Game Mechanics
+* Smooth Animations
+* Fast Performance with Vite
+* Modern React Architecture
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+
+* React.js
+* JavaScript (ES6+)
+* CSS3
+
+### Development Tools
+
+* Vite
+* ESLint
+
+---
+
+## 📸 Screenshots
+
+<img width="1245" height="628" alt="image" src="https://github.com/user-attachments/assets/66421e91-c85f-49fb-984e-03f09b909d68" />
+<img width="1264" height="607" alt="image" src="https://github.com/user-attachments/assets/e175a0b0-1ac2-401d-ac35-8f79f8b2ea42" />
+<img width="911" height="453" alt="image" src="https://github.com/user-attachments/assets/4024df98-aaf5-4569-9872-d401c273a56c" />
+<img width="1246" height="607" alt="image" src="https://github.com/user-attachments/assets/7e827e7a-6ba2-413a-bbbf-f09303245d1d" />
+<img width="1270" height="576" alt="image" src="https://github.com/user-attachments/assets/763b98e0-f263-4084-81f3-a4b43d034427" />
+
+
+---
+
+## 📂 Project Structure
+
+```text
+Athena
+├── public/
+├── src/
+├── index.html
+├── package.json
+├── vite.config.js
+└── README.md
+```
+
+---
+
+## ⚙️ Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/vanshika2205/Athena.git
+```
+
+Navigate to the project directory:
+
+```bash
+cd Athena
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run the development server:
+
+```bash
+npm run dev
+```
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+---
+
+## 🎯 Learning Outcomes
+
+* React Component Architecture
+* State Management
+* Interactive Game Development
+* Frontend Optimization
+* Responsive Design Principles
+* Modern Build Tooling with Vite
+
+---
+
+## 👩‍💻 Author
+
+**Vanshika Bansal**
+
