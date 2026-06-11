@@ -4,7 +4,7 @@ Athena is a browser-based adventure game built with React and Vite, designed to 
 
 ## 🚀 Live Demo
 
-https://athena-rho-three.vercel.app/
+(https://athena-5oox.vercel.app)
 
 ---
 
