@@ -873,3 +873,23 @@ button:hover {
 .ctrl-btn:active {
     background: rgba(255, 255, 255, 0.5);
 }
+
+/* Premium Profile Tag Input Focus */
+#playerNameInput:focus {
+    border-color: var(--neon-green) !important;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.8), 0 0 15px rgba(74, 222, 128, 0.6) !important;
+}
+
+/* Profile Selector Cards Interactive Hover State */
+.profile-selector-card:hover {
+    transform: scale(1.03) translateY(-1px) !important;
+    border-color: var(--neon-blue) !important;
+    background: rgba(56, 189, 248, 0.08) !important;
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.25) !important;
+}
+
+/* Auth Input Fields Premium Focus States */
+.screen form input:focus {
+    border-color: var(--neon-green) !important;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.8), 0 0 15px rgba(74, 222, 128, 0.6) !important;
+}

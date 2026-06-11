@@ -94,7 +94,25 @@ const CONFIG = {
 
 export default function App() {
     // 1. React States for overlays and stats updates
-    const [gameState, setGameState] = useState('START'); // START, PLAYING, PAUSED, GAMEOVER
+    const [playerName, setPlayerName] = useState('');
+    const [activeEmail, setActiveEmail] = useState('');
+    const [gameState, setGameState] = useState('SIGNUP'); // SIGNUP, START, PLAYING, PAUSED, GAMEOVER
+
+    const [usersDb, setUsersDb] = useState(() => {
+        try {
+            const stored = localStorage.getItem('engi_users_db');
+            return stored ? JSON.parse(stored) : {};
+        } catch (e) {
+            return {};
+        }
+    });
+
+    const [authTab, setAuthTab] = useState('LOGIN'); // LOGIN or REGISTER
+    const [authEmail, setAuthEmail] = useState('');
+    const [authPassword, setAuthPassword] = useState('');
+    const [authArcadeTag, setAuthArcadeTag] = useState('');
+    const [signupError, setSignupError] = useState('');
+
     const [score, setScore] = useState(0);
     const [level, setLevel] = useState(1);
     const [coins, setCoins] = useState(0);
@@ -113,7 +131,6 @@ export default function App() {
 
     // High Score inline save states
     const [isHighScoreEligible, setIsHighScoreEligible] = useState(false);
-    const [playerName, setPlayerName] = useState('');
 
     // Troll video states
     const [showVideo, setShowVideo] = useState(false);
@@ -205,18 +222,22 @@ export default function App() {
         setTimeout(() => playTone(783.99, 'triangle', 0.3, 0.1), 200);
     };
 
-    // Load Saved Data
+    const saveProfileData = (name, data) => {
+        if (!name) return;
+        try {
+            const stored = localStorage.getItem('engi_profiles_data');
+            const profiles = stored ? JSON.parse(stored) : {};
+            profiles[name] = {
+                ...profiles[name],
+                ...data
+            };
+            localStorage.setItem('engi_profiles_data', JSON.stringify(profiles));
+        } catch (e) {}
+    };
+
+    // Load Saved Settings Data
     useEffect(() => {
         try {
-            const savedCoins = localStorage.getItem('engi_coins');
-            if (savedCoins) setCoins(parseInt(savedCoins));
-
-            const savedChar = localStorage.getItem('engi_selected_char');
-            if (savedChar) setSelectedChar(savedChar);
-
-            const savedOwned = localStorage.getItem('engi_owned_chars');
-            if (savedOwned) setOwnedChars(JSON.parse(savedOwned));
-
             const savedBoard = localStorage.getItem('engi_leaderboard');
             if (savedBoard) setLeaderboard(JSON.parse(savedBoard));
 
@@ -227,6 +248,26 @@ export default function App() {
             if (savedVolSfx) setSfxVolume(parseFloat(savedVolSfx));
         } catch(e) {}
     }, []);
+
+    // Load profile specific stats when active profile changes & handle legacy data migration
+    useEffect(() => {
+        if (!activeEmail) {
+            setPlayerName('');
+            setCoins(0);
+            setOwnedChars(['felix']);
+            setSelectedChar('felix');
+            return;
+        }
+        try {
+            const user = usersDb[activeEmail];
+            if (user) {
+                setPlayerName(user.playerName || 'Gamer');
+                setCoins(user.coins ?? 0);
+                setOwnedChars(user.ownedChars ?? ['felix']);
+                setSelectedChar(user.selectedChar ?? 'felix');
+            }
+        } catch (e) {}
+    }, [activeEmail, usersDb]);
 
     // Apply background music volume adjustments
     useEffect(() => {
@@ -712,7 +753,7 @@ export default function App() {
                 
                 setCoins(prev => {
                     let updated = prev + coinValue;
-                    localStorage.setItem('engi_coins', updated);
+                    saveProfileData(playerName, { coins: updated });
                     return updated;
                 });
                 playCoinSnd();
@@ -911,30 +952,121 @@ export default function App() {
 
     const checkHighScoreSaveState = (scoreVal, levelVal) => {
         try {
-            let isEligible = leaderboard.length < 5 || scoreVal > leaderboard[leaderboard.length - 1].score;
+            let savedBoard = [];
+            try {
+                const stored = localStorage.getItem('engi_leaderboard');
+                if (stored) savedBoard = JSON.parse(stored);
+            } catch (err) {}
+
+            let isEligible = savedBoard.length < 5 || scoreVal > (savedBoard[savedBoard.length - 1]?.score || 0);
             if (isEligible) {
+                let name = playerName.trim().substring(0, 12) || "Gamer";
+                let date = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                
+                let board = [ ...savedBoard ];
+                board.push({ name, score: scoreVal, level: levelVal, date });
+                board.sort((a, b) => b.score - a.score);
+                board = board.slice(0, 5);
+
+                setLeaderboard(board);
+                localStorage.setItem('engi_leaderboard', JSON.stringify(board));
                 setIsHighScoreEligible(true);
+                playTone(800, 'triangle', 0.2, 0.1);
+            } else {
+                setIsHighScoreEligible(false);
             }
         } catch(e) {}
     };
 
-    // Handle high score saves
-    const handleSaveScore = () => {
-        let name = playerName.trim().substring(0, 12) || "Gamer";
-        let date = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const handleRegisterAuth = (e) => {
+        if (e) e.preventDefault();
         
-        let board = [ ...leaderboard ];
-        board.push({ name, score, level, date });
-        board.sort((a, b) => b.score - a.score);
-        board = board.slice(0, 5);
+        const tag = authArcadeTag.trim();
+        const mail = authEmail.trim().toLowerCase();
+        const pass = authPassword;
 
-        setLeaderboard(board);
-        localStorage.setItem('engi_leaderboard', JSON.stringify(board));
+        if (!tag || tag.length < 3 || tag.length > 12) {
+            setSignupError("Arcade Tag must be 3-12 characters!");
+            return;
+        }
         
-        setIsHighScoreEligible(false);
-        setPlayerName('');
-        playTone(800, 'triangle', 0.2, 0.1);
-        setShowLeaderboard(true);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(mail)) {
+            setSignupError("Please enter a valid email address!");
+            return;
+        }
+
+        if (pass.length < 6) {
+            setSignupError("Password must be at least 6 characters!");
+            return;
+        }
+
+        if (usersDb[mail]) {
+            setSignupError("This email is already registered!");
+            return;
+        }
+
+        const newUser = {
+            email: mail,
+            password: pass,
+            playerName: tag,
+            coins: 0,
+            ownedChars: ['felix'],
+            selectedChar: 'felix'
+        };
+
+        const updatedDb = {
+            ...usersDb,
+            [mail]: newUser
+        };
+
+        setUsersDb(updatedDb);
+        localStorage.setItem('engi_users_db', JSON.stringify(updatedDb));
+        
+        setSignupError('');
+        setAuthEmail('');
+        setAuthPassword('');
+        setAuthArcadeTag('');
+        setActiveEmail(mail);
+        setGameState('START');
+        playTone(600, 'sine', 0.15, 0.1);
+    };
+
+    const handleLoginAuth = (e) => {
+        if (e) e.preventDefault();
+        
+        const mail = authEmail.trim().toLowerCase();
+        const pass = authPassword;
+
+        if (!mail || !pass) {
+            setSignupError("Please enter email and password!");
+            return;
+        }
+
+        const user = usersDb[mail];
+        if (!user) {
+            setSignupError("Email not found!");
+            return;
+        }
+
+        if (user.password !== pass) {
+            setSignupError("Incorrect password!");
+            return;
+        }
+
+        setSignupError('');
+        setAuthEmail('');
+        setAuthPassword('');
+        setAuthArcadeTag('');
+        setActiveEmail(mail);
+        setGameState('START');
+        playTone(600, 'sine', 0.15, 0.1);
+    };
+
+    const handleLogoutAuth = () => {
+        setActiveEmail('');
+        setGameState('SIGNUP');
+        playTone(600, 'sine', 0.15, 0.1);
     };
 
     // Handle skins selecting/purchasing
@@ -943,7 +1075,7 @@ export default function App() {
 
         if (isOwned) {
             setSelectedChar(char.id);
-            localStorage.setItem('engi_selected_char', char.id);
+            saveProfileData(activeEmail, { selectedChar: char.id });
             playTone(600, 'sine', 0.1, 0.1);
         } else {
             if (coins >= char.cost) {
@@ -954,9 +1086,11 @@ export default function App() {
                 setOwnedChars(updatedOwned);
                 setSelectedChar(char.id);
 
-                localStorage.setItem('engi_coins', updatedCoins);
-                localStorage.setItem('engi_owned_chars', JSON.stringify(updatedOwned));
-                localStorage.setItem('engi_selected_char', char.id);
+                saveProfileData(activeEmail, { 
+                    coins: updatedCoins, 
+                    ownedChars: updatedOwned, 
+                    selectedChar: char.id 
+                });
 
                 playTone(800, 'triangle', 0.2, 0.1);
                 setTimeout(() => playTone(1000, 'triangle', 0.3, 0.1), 100);
@@ -977,14 +1111,16 @@ export default function App() {
             <div className="road-board" id="roadBoard" ref={roadBoardRef}></div>
 
             {/* Left HUD Pill stats */}
-            <HUD level={level} score={score} coins={coins} />
+            {gameState !== 'SIGNUP' && <HUD level={level} score={score} coins={coins} />}
 
             {/* Right HUD Menu Actions */}
-            <HudActions 
-                onOpenShop={() => setShowShop(true)}
-                onOpenLeaderboard={() => setShowLeaderboard(true)}
-                onToggleVolume={() => setShowVolume(prev => !prev)}
-            />
+            {gameState !== 'SIGNUP' && (
+                <HudActions 
+                    onOpenShop={() => setShowShop(true)}
+                    onOpenLeaderboard={() => setShowLeaderboard(true)}
+                    onToggleVolume={() => setShowVolume(prev => !prev)}
+                />
+            )}
 
             {/* Sound controls sliders panel */}
             <VolumePopover 
@@ -1041,10 +1177,234 @@ export default function App() {
             {/* Level Up animations message */}
             <div id="levelUpMsg">STONKS! 📈</div>
 
+            {/* Overlays: Profile Signup / Login Screen */}
+            {gameState === 'SIGNUP' && (
+                <div id="signupScreen" className="screen">
+                    <h1 style={{ fontSize: '32px', letterSpacing: '2px', color: 'var(--neon-blue)', textShadow: '0 0 15px rgba(56, 189, 248, 0.6)', marginBottom: '5px' }}>
+                        ARCADE PORTAL
+                    </h1>
+                    <p style={{ maxWidth: '85%', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+                        Access your profile or register to claim your scores on the Leaderboard.
+                    </p>
+
+                    {/* Tab Navigation */}
+                    <div style={{ display: 'flex', width: '85%', maxWidth: '280px', background: 'rgba(0,0,0,0.6)', borderRadius: '25px', padding: '4px', border: '1.5px solid rgba(56,189,248,0.25)', marginBottom: '20px' }}>
+                        <div 
+                            onClick={() => { setAuthTab('LOGIN'); setSignupError(''); }}
+                            style={{
+                                flex: 1,
+                                padding: '8px 0',
+                                textAlign: 'center',
+                                borderRadius: '20px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                fontSize: '12px',
+                                background: authTab === 'LOGIN' ? 'var(--neon-blue)' : 'transparent',
+                                color: authTab === 'LOGIN' ? 'black' : 'var(--text-secondary)',
+                                transition: 'all 0.25s ease'
+                            }}
+                        >
+                            SIGN IN
+                        </div>
+                        <div 
+                            onClick={() => { setAuthTab('REGISTER'); setSignupError(''); }}
+                            style={{
+                                flex: 1,
+                                padding: '8px 0',
+                                textAlign: 'center',
+                                borderRadius: '20px',
+                                cursor: 'pointer',
+                                fontWeight: 'bold',
+                                fontSize: '12px',
+                                background: authTab === 'REGISTER' ? 'var(--neon-blue)' : 'transparent',
+                                color: authTab === 'REGISTER' ? 'black' : 'var(--text-secondary)',
+                                transition: 'all 0.25s ease'
+                            }}
+                        >
+                            REGISTER
+                        </div>
+                    </div>
+                    
+                    {authTab === 'LOGIN' ? (
+                        <form onSubmit={handleLoginAuth} style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '85%', maxWidth: '280px' }}>
+                            <input 
+                                type="email" 
+                                placeholder="Email Address" 
+                                value={authEmail}
+                                onChange={(e) => { setAuthEmail(e.target.value); if (signupError) setSignupError(''); }}
+                                style={{
+                                    padding: '12px 18px',
+                                    borderRadius: '25px',
+                                    border: '1.5px solid var(--neon-blue)',
+                                    background: 'rgba(0,0,0,0.7)',
+                                    color: 'white',
+                                    textAlign: 'center',
+                                    fontSize: '14px',
+                                    outline: 'none'
+                                }}
+                                required
+                            />
+                            <input 
+                                type="password" 
+                                placeholder="Password" 
+                                value={authPassword}
+                                onChange={(e) => { setAuthPassword(e.target.value); if (signupError) setSignupError(''); }}
+                                style={{
+                                    padding: '12px 18px',
+                                    borderRadius: '25px',
+                                    border: '1.5px solid var(--neon-blue)',
+                                    background: 'rgba(0,0,0,0.7)',
+                                    color: 'white',
+                                    textAlign: 'center',
+                                    fontSize: '14px',
+                                    outline: 'none'
+                                }}
+                                required
+                            />
+                            {signupError && (
+                                <span style={{ color: 'var(--neon-red)', fontSize: '12px', fontWeight: 'bold', textShadow: '0 0 5px rgba(248,113,113,0.3)' }}>
+                                    ⚠️ {signupError}
+                                </span>
+                            )}
+                            <button type="submit" style={{ padding: '12px 25px', fontSize: '14px', fontWeight: '900', borderRadius: '25px', marginTop: '5px' }}>
+                                LOGIN ACCESS
+                            </button>
+                        </form>
+                    ) : (
+                        <form onSubmit={handleRegisterAuth} style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '85%', maxWidth: '280px' }}>
+                            <input 
+                                type="text" 
+                                placeholder="Arcade Tag (Username)" 
+                                value={authArcadeTag}
+                                onChange={(e) => { setAuthArcadeTag(e.target.value); if (signupError) setSignupError(''); }}
+                                maxLength={12}
+                                style={{
+                                    padding: '12px 18px',
+                                    borderRadius: '25px',
+                                    border: '1.5px solid var(--neon-blue)',
+                                    background: 'rgba(0,0,0,0.7)',
+                                    color: 'white',
+                                    textAlign: 'center',
+                                    fontSize: '14px',
+                                    outline: 'none'
+                                }}
+                                required
+                            />
+                            <input 
+                                type="email" 
+                                placeholder="Email Address" 
+                                value={authEmail}
+                                onChange={(e) => { setAuthEmail(e.target.value); if (signupError) setSignupError(''); }}
+                                style={{
+                                    padding: '12px 18px',
+                                    borderRadius: '25px',
+                                    border: '1.5px solid var(--neon-blue)',
+                                    background: 'rgba(0,0,0,0.7)',
+                                    color: 'white',
+                                    textAlign: 'center',
+                                    fontSize: '14px',
+                                    outline: 'none'
+                                }}
+                                required
+                            />
+                            <input 
+                                type="password" 
+                                placeholder="Password (Min 6 chars)" 
+                                value={authPassword}
+                                onChange={(e) => { setAuthPassword(e.target.value); if (signupError) setSignupError(''); }}
+                                style={{
+                                    padding: '12px 18px',
+                                    borderRadius: '25px',
+                                    border: '1.5px solid var(--neon-blue)',
+                                    background: 'rgba(0,0,0,0.7)',
+                                    color: 'white',
+                                    textAlign: 'center',
+                                    fontSize: '14px',
+                                    outline: 'none'
+                                }}
+                                required
+                            />
+                            {signupError && (
+                                <span style={{ color: 'var(--neon-red)', fontSize: '12px', fontWeight: 'bold', textShadow: '0 0 5px rgba(248,113,113,0.3)' }}>
+                                    ⚠️ {signupError}
+                                </span>
+                            )}
+                            <button type="submit" style={{ padding: '12px 25px', fontSize: '14px', fontWeight: '900', borderRadius: '25px', marginTop: '5px' }}>
+                                CREATE PROFILE
+                            </button>
+                        </form>
+                    )}
+
+                    {/* Back button if user already has an active session */}
+                    {activeEmail && (
+                        <button 
+                            onClick={() => setGameState('START')} 
+                            style={{ 
+                                padding: '6px 16px', 
+                                fontSize: '12px', 
+                                background: 'transparent', 
+                                color: 'var(--text-secondary)', 
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                borderRadius: '20px',
+                                boxShadow: 'none',
+                                marginTop: '15px'
+                            }}
+                        >
+                            Cancel
+                        </button>
+                    )}
+                </div>
+            )}
+
             {/* Overlays: Start Screen */}
             {gameState === 'START' && (
                 <div id="startScreen" className="screen">
                     <h1 style={{ fontSize: '48px', letterSpacing: '4px' }}>ENGI-RUN</h1>
+                    
+                    <div style={{ background: 'rgba(56, 189, 248, 0.08)', padding: '10px 20px', borderRadius: '20px', border: '1px solid var(--border-neon)', marginBottom: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                        <span style={{ color: 'var(--neon-green)', fontWeight: 'bold', fontSize: '14px' }}>🕹️ WELCOME, {playerName}!</span>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '11px', fontWeight: 'bold' }}>{activeEmail}</span>
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
+                            <button 
+                                onClick={() => {
+                                    setSignupError('');
+                                    setGameState('SIGNUP');
+                                }} 
+                                style={{ 
+                                    padding: '4px 10px', 
+                                    fontSize: '11px', 
+                                    fontWeight: 'bold', 
+                                    background: 'rgba(255,255,255,0.1)', 
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    borderRadius: '12px',
+                                    textTransform: 'uppercase',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    boxShadow: 'none'
+                                }}
+                            >
+                                Switch
+                            </button>
+                            <button 
+                                onClick={handleLogoutAuth} 
+                                style={{ 
+                                    padding: '4px 10px', 
+                                    fontSize: '11px', 
+                                    fontWeight: 'bold', 
+                                    background: 'rgba(239,68,68,0.2)', 
+                                    border: '1px solid rgba(239,68,68,0.4)',
+                                    borderRadius: '12px',
+                                    textTransform: 'uppercase',
+                                    color: 'var(--neon-red)',
+                                    cursor: 'pointer',
+                                    boxShadow: 'none'
+                                }}
+                            >
+                                Logout
+                            </button>
+                        </div>
+                    </div>
+
                     <p>Dodge the annoying exams and memes! Use <b>Left/Right Arrow keys</b> or <b>Swipe Left/Right</b> on mobile to switch lanes.</p>
                     <button id="startBtn" onClick={startGame}>START GAME</button>
                 </div>
@@ -1061,22 +1421,20 @@ export default function App() {
                     </p>
 
                     {/* Inline score save panel */}
-                    {isHighScoreEligible && (
-                        <div id="highScoreSaveArea" style={{ margin: '10px 0 25px 0', display: 'flex', flexDirection: 'column', gap: '8px', width: '85%', maxWidth: '280px', background: 'rgba(255,255,255,0.06)', padding: '15px', borderRadius: '16px', border: '1.5px dashed var(--neon-gold)' }}>
-                            <h3 style={{ color: 'var(--neon-gold)', fontSize: '15px', textTransform: 'uppercase', letterSpacing: '1px', textShadow: '0 0 5px rgba(251,191,36,0.4)' }}>
-                                🏆 New High Score!
+                    {isHighScoreEligible ? (
+                        <div id="highScoreSaveArea" style={{ margin: '10px 0 25px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', width: '85%', maxWidth: '280px', background: 'rgba(74,222,128,0.08)', padding: '12px 15px', borderRadius: '16px', border: '1.5px solid var(--neon-green)', boxShadow: '0 0 15px rgba(74, 222, 128, 0.25)' }}>
+                            <h3 style={{ color: 'var(--neon-green)', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', textShadow: '0 0 5px rgba(74,222,128,0.4)', margin: 0 }}>
+                                🏆 High Score Saved!
                             </h3>
-                            <input 
-                                type="text" 
-                                id="playerNameInput" 
-                                placeholder="Enter your name" 
-                                value={playerName}
-                                onChange={(e) => setPlayerName(e.target.value)}
-                                style={{ padding: '10px 14px', borderRadius: '20px', border: '1.5px solid var(--neon-blue)', background: 'rgba(0,0,0,0.6)', color: 'white', textAlign: 'center', fontSize: '14px', fontWeight: 'bold', outline: 'none', boxShadow: 'inset 0 0 5px rgba(0,0,0,0.8)' }}
-                            />
-                            <button onClick={handleSaveScore} style={{ padding: '8px 18px', fontSize: '13px', fontWeight: 'bold', width: '100%', borderRadius: '20px' }}>
-                                Save Score
-                            </button>
+                            <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                                Recorded under <b>{playerName}</b>
+                            </span>
+                        </div>
+                    ) : (
+                        <div style={{ margin: '10px 0 25px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', width: '85%', maxWidth: '280px', background: 'rgba(255,255,255,0.03)', padding: '12px 15px', borderRadius: '16px', border: '1.5px dashed rgba(255,255,255,0.1)' }}>
+                            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                                Played as <b>{playerName}</b>
+                            </span>
                         </div>
                     )}
                     
